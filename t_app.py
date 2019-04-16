@@ -13,25 +13,47 @@ my_auth = requests_oauthlib.OAuth1(CONSUMER_KEY, CONSUMER_SECRET,ACCESS_TOKEN, A
 
 
 def send_tweets_to_spark(http_resp, tcp_connection):
+
     for line in http_resp.iter_lines():
+
+        full_tweet = json.loads(line)
+        tweet_text = full_tweet['text'].encode('utf-8')
+        tweet_str = str(tweet_text)
+
         try:
-            full_tweet = json.loads(line)
-            tweet_text = full_tweet['text'].encode('utf-8')
-            print("Tweet Text: " + str(tweet_text))
+            print("Tweet Text: " + tweet_str)
             print ("------------------------------------------")
             tcp_connection.send(tweet_text)
         except:
             e = sys.exc_info()[0]
             print("Error: %s" % e)
 
-
 def get_tweets():
     url = 'https://stream.twitter.com/1.1/statuses/filter.json'
     #query_data = [('language', 'en'), ('locations', '-130,-20,100,50'),('track','#')]
-    query_data = [('locations', '-130,-20,100,50'), ('track', '#')]
+    #query_data = [('locations', '-130,-20,100,50'), ('track', '#')]
+    query_data = [('track', 'football')]
     query_url = url + '?' + '&'.join([str(t[0]) + '=' + str(t[1]) for t in query_data])
     response = requests.get(query_url, auth=my_auth, stream=True)
     print(query_url, response)
+
+    def analyzeSentiment(tweet):
+        r = requests.post("https://api.deepai.org/api/sentiment-analysis",
+            data={
+                'text': tweet,
+            },
+            headers={
+                'api-key': 'eeae3c4e-7b77-42dc-91a5-865f809e4c0d'
+            })
+        return r.json()
+
+    for line in response.iter_lines():
+        full_tweet = json.loads(line)
+        tweet_text = full_tweet['text'].encode('utf-8')
+        tweet_str = str(tweet_text)
+        sentiment = analyzeSentiment(tweet_str)
+        print(sentiment)
+        
     return response
 
 

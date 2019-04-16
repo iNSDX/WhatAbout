@@ -6,9 +6,12 @@ import sys
 import requests
 import findspark
 import os 
+import shutil
 
-os.rmdir('ck_whatabout')
-os.rmdir('spark-warehouse')
+if os.path.isdir('ck_whatabout'):
+    shutil.rmtree('ck_whatabout')
+if os.path.isdir('spark-warehouse'):
+    shutil.rmtree('spark-warehouse')
 
 findspark.init()
 # create spark instance
@@ -66,11 +69,14 @@ def process_rdd(time, rdd):
 
 # split each tweet into words
 words = dataStream.flatMap(lambda line: line.split(" "))
+
 # filter the words to get only hashtags, then map each hashtag to be a pair of (hashtag,1)
-#hashtags = words.filter(lambda w: '#' in w).map(lambda x: (x, 1))
-hashtags = words.map(lambda x: (x, 1))
+hashtags = words.filter(lambda w: '#' in w).map(lambda x: (x, 1))
+#hashtags = words.map(lambda x: (x, 1))
+
 # adding the count of each hashtag to its last count
 tags_totals = hashtags.updateStateByKey(aggregate_tags_count)
+
 # do processing for each RDD generated in each interval
 tags_totals.foreachRDD(process_rdd)
 
