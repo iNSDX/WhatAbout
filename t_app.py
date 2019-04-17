@@ -11,8 +11,8 @@ CONSUMER_KEY = 'JmOly0SsPxhcsj0FPjqU7ucLW'
 CONSUMER_SECRET = '809X1X90UTyhoCvV6GTe0ZlYsYjGRVtKjxvIW4nvDxPUI5p56l'
 my_auth = requests_oauthlib.OAuth1(CONSUMER_KEY, CONSUMER_SECRET,ACCESS_TOKEN, ACCESS_SECRET)
 
-
-search_word = input("Enter a word to filter by: ") or "football"
+# Commented for development 
+# search_word = input("Enter a word to filter by: ") or "football"
 # search_language = input("Enter prefered language: ") or "en"
 # search_location = input("Enter location of the tweets: ")
 
@@ -22,7 +22,7 @@ def send_tweets_to_spark(http_resp, tcp_connection):
 
         full_tweet = json.loads(line)
         tweet_text = full_tweet['text'].encode('utf-8')
-        tweet_str = str(tweet_text)
+        tweet_str = tweet_text.decode("utf-8")
 
         try:
             print("Tweet Text: " + tweet_str)
@@ -36,7 +36,7 @@ def get_tweets():
     url = 'https://stream.twitter.com/1.1/statuses/filter.json'
     #query_data = [('language', 'en'), ('locations', '-130,-20,100,50'),('track','#')]
     #query_data = [('locations', '-130,-20,100,50'), ('track', '#')]
-    query_data = [('track', search_word)]
+    query_data = [('track', 'football')]
     query_url = url + '?' + '&'.join([str(t[0]) + '=' + str(t[1]) for t in query_data])
     response = requests.get(query_url, auth=my_auth, stream=True)
     print(query_url, response)
@@ -54,10 +54,24 @@ def get_tweets():
     for line in response.iter_lines():
         full_tweet = json.loads(line)
         tweet_text = full_tweet['text'].encode('utf-8')
-        tweet_str = str(tweet_text)
+        tweet_str = tweet_text.decode("utf-8")
         sentiment = analyzeSentiment(tweet_str)
 
-        print("Tweet: {} | Sentiment: {}".format(tweet_str,sentiment))
+        sentiment_score_sum = 0.0
+        for s in sentiment.get('output'):
+            if s == 'Verynegative':
+                sentiment_score_sum+=0
+            elif s == 'Negative':
+                sentiment_score_sum+=0.25
+            elif s == 'Neutral':
+                sentiment_score_sum+=0.5
+            elif s == 'Positive':
+                sentiment_score_sum+=0.75
+            elif s == 'Verypositive':
+                sentiment_score_sum+=1
+        sentiment_score = sentiment_score_sum/len(sentiment.get('output'))
+
+        print("Tweet: {} | Sentiment: {} | Sentiment score: {}".format(tweet_str,sentiment,sentiment_score))
 
     return response
 
