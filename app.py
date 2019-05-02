@@ -16,8 +16,7 @@ def get_home_page():
 @app.route('/refreshData')
 def refresh_tweets():
     global tweets,scores
-    print("tweets now: " + str(tweets))
-    print("scores now: " + str(scores))
+    print("Number of tweets now: " + str(len(tweets)))
     return jsonify(sTweets=tweets, sScores=scores)
 
 @app.route('/updateData', methods=['POST'])
@@ -28,8 +27,7 @@ def update_data():
     tweets = ast.literal_eval(request.form['tweets'])
     scores = ast.literal_eval(request.form['scores'])
 
-    print("tweets received: " + str(tweets))
-    print("scores received: " + str(scores))
+    print("Number of tweets received: " + str(len(tweets)))
     return "success", 201
 
 if __name__ == "__main__":
