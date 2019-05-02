@@ -22,15 +22,29 @@
     }, function(data) {
         tweets = data.sTweets;
         scores = data.sScores;
-        //sw = data.sSw;
-        $("#title").text("Sentiment analysis for: ");
-        console.log(tweets);
+        sum_score = 0.0;
+        mean_score = sum_score/scores.length;
+        
         $("#tweets").empty();
         for(t in tweets){
-          index = t+1
-          $("#tweets").append("<p>Number: "+index+" | Tweet: "+tweets[t]+" | Score: "+scores[t]+"</p>");
+          index = parseInt(t)+1;
+          //score = Math.round(scores[t] * 100)/100;
+          score = scores[t];
+          sum_score+=score;
+          if(score>=0.6){
+            emoji = '&#128077';
+            color = 'green';
+          }else if(score<0.6 && score>=0.4){
+            emoji = '&#x1F937';
+            color = 'yellow';
+          }else{
+            emoji = '&#128078';
+            color = 'red';
+          }
+          $("#tweets").append("<p>Number: "+index+" | Tweet: "+tweets[t]+"</p><p style='color:"+color+";'>Score: "+score+"</p><span style='font-size:100px;'>"+emoji+"</span>");
         }
-         
+
+        $("#title").text("Mean sentiment analysis score for the word specified: "+mean_score);
       } 
     );
   },5000);

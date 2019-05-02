@@ -48,7 +48,7 @@ TCP_PORT = 9009
 conn = None
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((TCP_IP, TCP_PORT))
-s.listen(10)
+s.listen(50)
 print("Waiting for TCP connection...")
 conn, addr = s.accept()
 print("Connected... Starting getting tweets.")

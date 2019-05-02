@@ -7,6 +7,7 @@ import requests
 import findspark
 import os 
 import shutil
+from aylienapiclient import textapi
 
 if os.path.isdir('ck_whatabout'):
     shutil.rmtree('ck_whatabout')
@@ -29,17 +30,19 @@ spark = SparkSession.builder.enableHiveSupport().getOrCreate()
 spark.sql('CREATE TABLE tweets (tweet string, score float) STORED AS TEXTFILE')
 
 # Create the Streaming Context from the above spark context with window size 5 seconds
-ssc = StreamingContext(sc, 3)
+ssc = StreamingContext(sc, 5)
 # Setting a checkpoint to allow RDD recovery
 ssc.checkpoint("ck_whatabout")
 
 # Read data from port 9009
 dataStream = ssc.socketTextStream("localhost",9009)
 
+
 def get_sql_context_instance(spark_context):
     if ('sqlContextSingletonInstance' not in globals()):
         globals()['sqlContextSingletonInstance'] = SQLContext(spark_context)
     return globals()['sqlContextSingletonInstance']
+
 
 def send_df_to_dashboard(df):
     # Extract the tweet from dataframe and convert them into array
@@ -55,37 +58,14 @@ def send_df_to_dashboard(df):
 
 
 def analyzeSentiment(tweet):
-    r = requests.post("https://api.deepai.org/api/sentiment-analysis",
-        data={
-            'text': tweet,
-        },
-        headers={
-            'api-key': 'eeae3c4e-7b77-42dc-91a5-865f809e4c0d'
-        })
+    # CARE
+    # 1000 calls/day
+    client = textapi.Client("e4c91a1c", "7af649d5a8502da656033172bf37ca7a")
+    sentiment = client.Sentiment({'mode': 'tweet','text': tweet})
+    score = round(float(sentiment.get('polarity_confidence')),2)
 
-    sentiment = r.json()
-    print("-----------------------------------"+tweet+'| Sentiment: '+str(sentiment)+"----------------------------------")
-    sentiment_score_sum = 0.0
-    sentiment_output = sentiment.get('output')
-
-    if type(sentiment_output) is list and len(sentiment_output)>0:
-        for s in sentiment_output:
-            if s == 'Verynegative':
-                sentiment_score_sum+=0
-            elif s == 'Negative':
-                sentiment_score_sum+=0.25
-            elif s == 'Positive':
-                sentiment_score_sum+=0.75
-            elif s == 'Verypositive':
-                sentiment_score_sum+=1
-            else:
-                sentiment_score_sum+=0.5
-
-        sentiment_score = round(sentiment_score_sum/len(sentiment_output),2)
-    else:
-        sentiment_score = 0.5
-
-    return sentiment_score
+    print("-----------------------------------"+tweet+'| Sentiment: '+str(score)+"----------------------------------")
+    return score
 
 
 def process_rdd(time, rdd):
@@ -102,7 +82,7 @@ def process_rdd(time, rdd):
         # Insert new tweets,scores into table tweets
         sql_context.sql("INSERT INTO TABLE tweets SELECT * FROM new_tweets")
         # Get all the tweets from the table using SQL
-        tweets_sentiment_df = sql_context.sql("SELECT * FROM tweets ORDER BY score DESC")
+        tweets_sentiment_df = sql_context.sql("SELECT * FROM tweets")
         tweets_sentiment_df.show()
 
         # Sends the tweets and their sentiment score to the dashboard
@@ -110,9 +90,6 @@ def process_rdd(time, rdd):
     except:
         e = sys.exc_info()[0]
         print("Error: %s" % e)
-
-# Map each tweet_data [tweet,sentiment] to be a pair of (tweet,sentiment)
-# tweets = dataStream.map(lambda tweet: (tweet, analyzeSentiment(tweet)))
 
 # Do processing for each RDD generated in each interval
 dataStream.foreachRDD(process_rdd)
