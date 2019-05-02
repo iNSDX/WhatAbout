@@ -1,3 +1,5 @@
-spark-warehouse/
-ck_whatabout/
-__pycache__/
+spark-warehouse
+ck_whatabout
+__pycache__
+metastore_db
+derby.log

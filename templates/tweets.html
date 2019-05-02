@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset="utf-8"/>
+    <title>WhatAbout Text Analysis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    
+    </head>
+    <body>
+    <h2 id="title"></h2>
+
+    <div id="tweets">
+    </div>
+
+    </body>
+</html>
+
+<script>
+
+  setInterval(function(){
+    $.getJSON('/refreshData', {
+    }, function(data) {
+        tweets = data.sTweets;
+        scores = data.sScores;
+        //sw = data.sSw;
+        $("#title").text("Sentiment analysis for: ");
+        console.log(tweets);
+        $("#tweets").empty();
+        for(t in tweets){
+          index = t+1
+          $("#tweets").append("<p>Number: "+index+" | Tweet: "+tweets[t]+" | Score: "+scores[t]+"</p>");
+        }
+         
+      } 
+    );
+  },5000);
+
+</script>

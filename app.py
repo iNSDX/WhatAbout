@@ -3,38 +3,34 @@ from flask import render_template
 import ast
 
 app = Flask(__name__)
-labels = []
-values = []
-sw = "" # Search term used
+tweets = []
+scores = []
 
 @app.route("/")
-def get_chart_page():
-    global labels,values,sw
-    labels = []
-    values = []
-    sw = ""
-    return render_template('chart.html', values=values, labels=labels, sw=sw)
+def get_home_page():
+    global tweets,scores
+    tweets = []
+    scores = []
+    return render_template('tweets.html', tweets=tweets, scores=scores)
 
 @app.route('/refreshData')
-def refresh_graph_data():
-    global labels, values,sw
-    print("labels now: " + str(labels))
-    print("data now: " + str(values))
-    print("search term now: " + str(sw))
-    return jsonify(sLabel=labels, sData=values, sSw=sw)
+def refresh_tweets():
+    global tweets,scores
+    print("tweets now: " + str(tweets))
+    print("scores now: " + str(scores))
+    return jsonify(sTweets=tweets, sScores=scores)
 
 @app.route('/updateData', methods=['POST'])
 def update_data():
-    global labels, values,sw
-    if not request.form or 'data' not in request.form:
+    global tweets,scores
+    if not request.form or 'tweets' not in request.form or 'scores' not in request.form:
         return "error",400
-    labels = ast.literal_eval(request.form['label'])
-    values = ast.literal_eval(request.form['data'])
-    # sw = ast.literal_eval(request.form['sw'])
-    print("labels received: " + str(labels))
-    print("data received: " + str(values))
-    print("search term: " + str(sw))
+    tweets = ast.literal_eval(request.form['tweets'])
+    scores = ast.literal_eval(request.form['scores'])
+
+    print("tweets received: " + str(tweets))
+    print("scores received: " + str(scores))
     return "success", 201
 
 if __name__ == "__main__":
-    app.run(host='localhost', port=5001)
+    app.run(host='localhost', port=5000)
