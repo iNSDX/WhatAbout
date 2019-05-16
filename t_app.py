@@ -4,17 +4,14 @@ import requests
 import requests_oauthlib
 import json
 
-# Replace the values below with yours
+# Twitter OAuth
 ACCESS_TOKEN = '838794388750942209-Zrj5wNI9vaTOYsl8m4Kp7ma8YCYBXeR'
 ACCESS_SECRET = 'BHJdWUjVbWMdyIxRvUXrMxpwXifk9yiXIEOjnMWgKZblY'
 CONSUMER_KEY = 'JmOly0SsPxhcsj0FPjqU7ucLW'
 CONSUMER_SECRET = '809X1X90UTyhoCvV6GTe0ZlYsYjGRVtKjxvIW4nvDxPUI5p56l'
 my_auth = requests_oauthlib.OAuth1(CONSUMER_KEY, CONSUMER_SECRET,ACCESS_TOKEN, ACCESS_SECRET)
 
-# Commented for development 
 search_word = input("Enter a word to filter by: ") or "football"
-# search_language = input("Enter prefered language: ") or "en"
-# search_location = input("Enter location of the tweets: ")
 
 def send_tweets_to_spark(http_resp, tcp_connection):
 
@@ -34,8 +31,6 @@ def send_tweets_to_spark(http_resp, tcp_connection):
 
 def get_tweets():
     url = 'https://stream.twitter.com/1.1/statuses/filter.json'
-    #query_data = [('language', 'en'), ('locations', '-130,-20,100,50'),('track','#')]
-    #query_data = [('locations', '-130,-20,100,50'), ('track', '#')]
     query_data = [('track', search_word)]
     query_url = url + '?' + '&'.join([str(t[0]) + '=' + str(t[1]) for t in query_data])
     response = requests.get(query_url, auth=my_auth, stream=True)

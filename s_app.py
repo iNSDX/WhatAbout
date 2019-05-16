@@ -37,13 +37,6 @@ ssc.checkpoint("ck_whatabout")
 # Read data from port 9009
 dataStream = ssc.socketTextStream("localhost",9009)
 
-
-def get_sql_context_instance(spark_context):
-    if ('sqlContextSingletonInstance' not in globals()):
-        globals()['sqlContextSingletonInstance'] = SQLContext(spark_context)
-    return globals()['sqlContextSingletonInstance']
-
-
 def send_df_to_dashboard(df):
     # Extract the tweet from dataframe and convert them into array
     tweets = [str(t.tweet) for t in df.select("tweet").collect()]
