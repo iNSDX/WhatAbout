@@ -1,0 +1,5 @@
+pyspark
+findspark
+aylien-apiclient
+requests
+requests-oauthlib
